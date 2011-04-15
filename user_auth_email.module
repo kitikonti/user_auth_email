@@ -1,0 +1,102 @@
+<?php
+// $Id$
+
+/**
+ * @file user_admin.module
+ * Set an specific user or a role, instead of the site's email adress, to receive user depending mails.
+ */
+
+/**
+ * Implementation of hook_menu().
+ */
+function user_auth_email_menu() {
+  $items['admin/settings/user_auth_email'] = array(
+    'title' => 'User Authentication Email',
+    'description' => 'Controle the outgoing email\'s to admin\'s when new users are waiting for approval.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('user_auth_email_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'user_auth_email.admin.inc',
+  );
+
+  $items['user_auth_email/autocomplete'] = array(
+    'title' => 'User Authentication Email autocomplete',
+    'page callback' => 'user_auth_email_autocomplete',
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
+    'file' => 'user_auth_email.pages.inc',
+  );
+
+  return $items;
+}
+
+
+/**
+ * Implementation of hook_mail_alter().
+ */
+function user_auth_email_mail_alter(&$message) {
+  $id = $message['id'];
+  $to = $message['to'];
+  $site_mail = variable_get('site_mail', '');
+
+  if ($to == $site_mail && $id = 'user_register_pending_approval_admin') {
+    $default = variable_get('user_auth_email_default', TRUE);
+    $users = variable_get('user_auth_email_users', '');
+    $roles = variable_get('user_auth_email_roles', array());
+
+    // handle the default variable
+    if ($default) {
+      $adresses = $site_mail.', ';
+    }
+    else {
+      $adresses = 'trash@example.com, ';
+    }
+
+    // handle the users variable
+    $users = trim($users);
+    if ($users) {
+      $users = explode(',', $users);
+      for ($i = 0; $i < count($users); $i++) {
+        if ($users[$i]) {
+          user_auth_email_add_email($adresses, $users[$i]);
+        }
+      }
+    }
+
+    // handle the roles variable
+    if($roles) {
+      $active_role = array();
+      foreach ($roles as $value) {
+        if ($value != 0) {
+          $active_role[] = $value;
+        }
+      }
+
+      if ($active_role) {
+        for ($i = 0; $i < count($active_role); $i++) {
+          $result = db_query("SELECT u.name FROM {users} u
+          INNER JOIN {users_roles} ur ON u.uid=ur.uid WHERE ur.rid = %d", $active_role[$i]);
+          while ($user = db_fetch_object($result)) {
+            user_auth_email_add_email($adresses, $user -> name);
+          }
+        }
+      }
+    }
+
+    $message['to'] = $adresses;
+  }
+}
+
+
+/**
+ * Helper function for adding a new mail adress to $adresses if not already exists.
+ */
+function user_auth_email_add_email(&$adresses, $username) {
+  $username = trim($username);
+  $user_info = array('name' => $username);
+  $user = user_load($user_info);
+  if (strpos($adresses, $user -> mail) === FALSE && $user -> status == 1) {
+    $adresses .= $user -> mail.', ';
+  }
+}

@@ -1,0 +1,4 @@
+; $Id$
+name = User Authentification E-Mail
+description = Controle the outgoing email's to admin's when new users are waiting for approval.
+core = 6.x

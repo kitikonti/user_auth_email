@@ -1,0 +1,11 @@
+<?php
+// $Id$
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function user_auth_email_uninstall() {
+  variable_del('user_auth_email_default');
+  variable_del('user_auth_email_users');
+  variable_del('user_auth_email_roles');
+}
