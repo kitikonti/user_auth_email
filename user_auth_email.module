@@ -37,10 +37,9 @@ function user_auth_email_menu() {
  */
 function user_auth_email_mail_alter(&$message) {
   $id = $message['id'];
-  $to = $message['to'];
-  $site_mail = variable_get('site_mail', '');
 
-  if ($to == $site_mail && $id = 'user_register_pending_approval_admin') {
+  if ($id == 'user_register_pending_approval_admin') {
+    $site_mail = variable_get('site_mail', '');
     $default = variable_get('user_auth_email_default', TRUE);
     $users = variable_get('user_auth_email_users', '');
     $roles = variable_get('user_auth_email_roles', array());
