@@ -39,7 +39,7 @@ function user_auth_email_mail_alter(&$message) {
   $id = $message['id'];
 
   if ($id == 'user_register_pending_approval_admin') {
-    $site_mail = variable_get('site_mail', '');
+    $site_mail = variable_get('site_mail', 'trash@example.com');
     $default = variable_get('user_auth_email_default', TRUE);
     $users = variable_get('user_auth_email_users', '');
     $roles = variable_get('user_auth_email_roles', array());
